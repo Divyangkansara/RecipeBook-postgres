@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Email Verification</h1>
+        <div id="message"></div>
+        <div id="token-input">
+            <label for="token">Enter Token:</label>
+            <input type="text" id="token" name="token" required>
+            <button id="verify-button">Verify Email</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (token) {
+                verifyEmail(token);
+            }
+
+            document.getElementById('verify-button').addEventListener('click', async () => {
+                const inputToken = document.getElementById('token').value;
+                if (inputToken) {
+                    verifyEmail(inputToken);
+                } else {
+                    document.getElementById('message').innerText = 'Please enter a token.';
+                }
+            });
+
+            async function verifyEmail(token) {
+                try {
+                    const response = await fetch(`/auth/verify-email?token=${token}`);
+                    const data = await response.json();
+                    if (response.ok) {
+                        document.getElementById('message').innerText = 'Email verified successfully!';
+                    } else {
+                        document.getElementById('message').innerText = data.detail || 'Invalid verification link.';
+                    }
+                } catch (error) {
+                    document.getElementById('message').innerText = 'An error occurred during email verification.';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

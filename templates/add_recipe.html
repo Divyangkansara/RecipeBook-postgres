@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Recipe</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Add a New Recipe</h1>
+        <form id="add-recipe-form" action="/recipes/" method="POST">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br>
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" required></textarea><br>
+
+            <label for="ingredients">Ingredients:</label>
+            <textarea id="ingredients" name="ingredients" required></textarea><br>
+
+            <label for="instructions">Instructions:</label>
+            <textarea id="instructions" name="instructions" required></textarea><br>
+
+            <label for="is_veg">Is Vegetarian:</label>
+            <input type="checkbox" id="is_veg" name="is_veg"><br>
+
+            <button type="submit">Add Recipe</button>
+        </form>
+        <div id="message"></div>
+    </div>
+    <script>
+        document.getElementById('add-recipe-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const data = {
+                name: formData.get('name'),
+                description: formData.get('description'),
+                ingredients: formData.get('ingredients'),
+                instructions: formData.get('instructions'),
+                is_veg: formData.get('is_veg') === 'on'
+            };
+
+            try {
+                const response = await fetch('/recipes/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('message').innerText = 'Recipe added successfully!';
+                    form.reset();
+                } else {
+                    document.getElementById('message').innerText = result.detail || 'An error occurred';
+                }
+            } catch (error) {
+                document.getElementById('message').innerText = 'An error occurred';
+            }
+        });
+    </script>
+</body>
+</html>

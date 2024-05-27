@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Recipe List</h1>
+        <nav>
+            <a href="/login" id="login-link">Login</a> |
+            <a href="/register" id="register-link">Register</a> |
+            <a href="/verify-email" id="verify-email-link">Verify Email</a>
+            <button id="logoutButton" style="display:none;">Logout</button>
+        </nav>
+        <a href="/recipes/new">Add New Recipe</a>
+        <ul>
+            {% for recipe in recipes %}
+            <li>
+                <h2>{{ recipe.name }}</h2>
+                <p>{{ recipe.description }}</p>
+                <a href="#" onclick="onRecipeClick('{{ recipe.recipe_id }}')">View Recipe</a> |
+                <a href="#" onclick="onRateClick('{{ recipe.recipe_id }}')">Rate Recipe</a>
+            </li>
+            {% endfor %}
+        </ul>
+        <div id="message">
+            {% if message %}
+            <p>{{ message }}</p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        function getJwtToken() {
+            return localStorage.getItem("token");
+        }
+
+        function setJwtToken(token) {
+            localStorage.setItem("token", token);
+        }
+
+        function onRecipeClick(recipe_id) {
+            const token = getJwtToken();
+            if (!token) {
+                alert("You need to log in first.");
+                return;
+            }
+
+            window.location.href = `/recipes/${recipe_id}`;
+        }
+
+        function onRateClick(recipe_id) {
+            const token = getJwtToken();
+            if (!token) {
+                alert("You need to log in first.");
+                return;
+            }
+
+            window.location.href = `/recipes/${recipe_id}/rate`;
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (token) {
+                try {
+                    const response = await fetch(`/auth/verify-email?token=${token}`);
+                    const data = await response.json();
+                    if (response.ok) {
+                        document.getElementById('message').innerText = data.message;
+                    } else {
+                        document.getElementById('message').innerText = data.detail;
+                    }
+                } catch (error) {
+                    document.getElementById('message').innerText = 'Error verifying email';
+                }
+            }
+
+            const storedToken = getJwtToken();
+            const loginLink = document.getElementById("login-link");
+            const registerLink = document.getElementById("register-link");
+            const verifyEmailLink = document.getElementById("verify-email-link");
+            const logoutButton = document.getElementById("logoutButton");
+
+            if (storedToken) {
+                loginLink.style.display = "none";
+                registerLink.style.display = "none";
+                verifyEmailLink.style.display = "none";
+                logoutButton.style.display = "inline-block";
+
+                logoutButton.addEventListener("click", () => {
+                    localStorage.removeItem("token");
+                    window.location.reload();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

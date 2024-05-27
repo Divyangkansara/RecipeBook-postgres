@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Recipe</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            padding: 20px;
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            font-size: 2em;
+            color: lightgray;
+            cursor: pointer;
+        }
+        .star-rating input[type="radio"]:checked ~ label {
+            color: gold;
+        }
+        .star-rating input[type="radio"]:checked ~ label ~ label {
+            color: gold;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rate {{ recipe.name }}</h1>
+        <form id="rate-form">
+            <div class="star-rating">
+                <input type="radio" id="1-star" name="ratings" value="1">
+                <label for="5-stars" class="star">&#9733;</label>
+                <input type="radio" id="2-stars" name="ratings" value="2">
+                <label for="4-stars" class="star">&#9733;</label>
+                <input type="radio" id="3-stars" name="ratings" value="3">
+                <label for="3-stars" class="star">&#9733;</label>
+                <input type="radio" id="4-stars" name="ratings" value="4">
+                <label for="2-stars" class="star">&#9733;</label>
+                <input type="radio" id="5-stars" name="ratings" value="5">
+                <label for="1-star" class="star">&#9733;</label>
+            </div><br>
+
+            <label for="reviews">Review:</label>
+            <textarea id="reviews" name="reviews" required></textarea><br>
+
+            <button type="submit">Submit Rating</button>
+        </form>
+        <div id="message"></div>
+    </div>
+    <script>
+        document.querySelectorAll('.star-rating input[type="radio"]').forEach((radio) => {
+            radio.addEventListener('change', (event) => {
+                const currentRating = event.target.value;
+                document.querySelectorAll('.star-rating label').forEach((label, index) => {
+                    if (index >= 5 - currentRating) {
+                        label.style.color = 'gold';
+                    } else {
+                        label.style.color = 'lightgray';
+                    }
+                });
+            });
+        });
+
+        document.getElementById('rate-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("You need to log in first.");
+                return;
+            }
+
+            const recipeId = {{ recipe.recipe_id }};
+            const ratings = document.querySelector('input[name="ratings"]:checked').value;
+            const reviews = document.getElementById('reviews').value;
+
+            const response = await fetch(`/recipes/${recipeId}/ratings/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    ratings: ratings,
+                    reviews: reviews
+                })
+            });
+            
+            const messageDiv = document.getElementById('message');
+            if (response.ok) {
+                messageDiv.innerText = 'Rating submitted successfully';
+            } else {
+                const errorData = await response.json();
+                messageDiv.innerText = `Error: ${errorData.detail}`;
+            }
+        });
+    </script>
+</body>
+</html>
